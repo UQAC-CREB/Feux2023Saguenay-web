@@ -31,7 +31,6 @@
       overflow: hidden;
     }
 
-    /* ── HEADER ── */
     #header {
       height: 52px;
       background: var(--rouge);
@@ -66,10 +65,8 @@
       color: rgba(255,255,255,0.85);
     }
 
-    /* ── LAYOUT ── */
     #app { display: flex; height: calc(100vh - 52px); }
 
-    /* ── PANEL ── */
     #panel {
       width: 300px;
       min-width: 300px;
@@ -114,7 +111,6 @@
     }
     .divider { border: none; border-top: 1px solid var(--panel-border); }
 
-    /* Info box */
     #info-box {
       background: #252b35;
       border: 1px solid var(--panel-border);
@@ -148,7 +144,6 @@
       line-height: 1.5;
     }
 
-    /* Chart */
     #chart-wrap {
       background: #252b35;
       border: 1px solid var(--panel-border);
@@ -157,7 +152,6 @@
     }
     #myChart { width: 100% !important; }
 
-    /* Toggles */
     .layer-toggles { display: flex; flex-direction: column; gap: 6px; }
     .toggle-row {
       display: flex; align-items: center; gap: 10px;
@@ -167,11 +161,9 @@
     .toggle-row input[type=checkbox] { accent-color: var(--orange); cursor: pointer; }
     .toggle-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
-    /* ── MAP ── */
     #map { flex: 1; position: relative; }
     #map-container { width: 100%; height: 100%; }
 
-    /* Basemap switcher */
     #basemap-switch {
       position: absolute;
       top: 10px; right: 10px;
@@ -199,7 +191,6 @@
     .bm-btn.active { background: var(--rouge); color: #fff; }
     .bm-btn:hover:not(.active) { background: rgba(255,255,255,0.07); color: var(--text-main); }
 
-    /* Loading */
     #loading {
       position: absolute; inset: 0;
       background: var(--dark);
@@ -242,7 +233,6 @@
 </div>
 
 <div id="app">
-
   <div id="panel">
     <div class="panel-section">
       <span class="panel-label">Numéro de feu</span>
@@ -305,23 +295,18 @@
     <div id="map-container"></div>
     <div id="basemap-switch">
       <button class="bm-btn active" data-bm="satellite">Satellite</button>
-      <button class="bm-btn"        data-bm="terrain">Terrain</button>
       <button class="bm-btn"        data-bm="neutre">Neutre</button>
       <button class="bm-btn"        data-bm="sombre">Sombre</button>
     </div>
   </div>
-
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// CONFIG BASEMAPS
-// Satellite Google : source raster inline, pas de fichier style externe
-// Les 3 autres     : fichiers style JSON CartoDB/Stadia
+// CONFIG
 // ═══════════════════════════════════════════════════════════
 const BOUNDS_INIT = [[-74.5, 48], [-69, 53]];
 
-// Style MapLibre inline pour Google Satellite
 function googleSatelliteStyle() {
   return {
     version: 8,
@@ -343,13 +328,12 @@ function googleSatelliteStyle() {
 }
 
 const STYLE_URLS = {
-  terrain:  'https://tiles.stadiamaps.com/styles/stamen_terrain.json',
-  neutre:   'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-  sombre:   'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  neutre: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+  sombre: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
 };
 
 // ═══════════════════════════════════════════════════════════
-// PSEUDO-LOG (identique à scales::pseudo_log_trans, sigma=10)
+// PSEUDO-LOG
 // ═══════════════════════════════════════════════════════════
 const Y_BREAKS = [0, 10, 100, 1000, 10000, 100000];
 function pseudoLog(v, sigma=10) { return Math.sign(v) * Math.log1p(Math.abs(v/sigma)); }
@@ -361,6 +345,7 @@ const Y_TICKS_LABEL = ['0','10','100','1 000','10 000','100 000'];
 // ═══════════════════════════════════════════════════════════
 let map, chartInst;
 let tableData    = {};
+let bboxByNofeu  = {};   // ← bbox précalculée par feu depuis le GeoJSON
 let selectedFeu  = null;
 let currentAlpha = 0.75;
 let currentBm    = 'satellite';
@@ -383,6 +368,23 @@ function flatCoords(geom) {
   if (geom.type === 'Polygon')      return geom.coordinates.flat();
   if (geom.type === 'MultiPolygon') return geom.coordinates.flat(2);
   return [];
+}
+
+// Précalculer les bbox depuis le GeoJSON en mémoire
+// → fonctionne peu importe le zoom ou la vue courante
+function buildBboxIndex(geojson) {
+  const index = {};
+  geojson.features.forEach(f => {
+    const n = String(f.properties.NOFEU);
+    if (!index[n]) index[n] = { minLng:Infinity, minLat:Infinity, maxLng:-Infinity, maxLat:-Infinity };
+    flatCoords(f.geometry).forEach(([lng, lat]) => {
+      if (lng < index[n].minLng) index[n].minLng = lng;
+      if (lng > index[n].maxLng) index[n].maxLng = lng;
+      if (lat < index[n].minLat) index[n].minLat = lat;
+      if (lat > index[n].maxLat) index[n].maxLat = lat;
+    });
+  });
+  return index;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -469,7 +471,7 @@ function updateInfoBox(nofeu) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// COUCHES — injection/réinjection après changement de fond
+// COUCHES
 // ═══════════════════════════════════════════════════════════
 function addAllLayers() {
   const bgVis     = document.getElementById('tog-bg').checked     ? 'visible' : 'none';
@@ -498,7 +500,6 @@ function addAllLayers() {
   const selFilter = selectedFeu
     ? ['==', ['get','NOFEU'], selectedFeu]
     : ['==', ['get','NOFEU'], '___NONE___'];
-
   map.addLayer({ id: 'feux-selected-line', type: 'line', source: 'feux',
     filter: selFilter,
     layout: { visibility: feuxVis },
@@ -521,7 +522,18 @@ function addAllLayers() {
 
 // ═══════════════════════════════════════════════════════════
 // SELECT & ZOOM
+// Utilise bboxByNofeu (précalculé depuis GeoJSON) → toujours fiable
 // ═══════════════════════════════════════════════════════════
+function zoomToFeu(nofeu) {
+  const bb = bboxByNofeu[nofeu];
+  if (!bb || !isFinite(bb.minLng)) return;
+  const pad = 0.04;
+  map.fitBounds(
+    [[bb.minLng - pad, bb.minLat - pad], [bb.maxLng + pad, bb.maxLat + pad]],
+    { padding: 50, duration: 800, maxZoom: 14 }
+  );
+}
+
 function selectFeu(nofeu) {
   selectedFeu = nofeu || null;
   document.getElementById('sel-feu').value = nofeu || '';
@@ -536,21 +548,9 @@ function selectFeu(nofeu) {
 
   if (!nofeu) {
     map.fitBounds(BOUNDS_INIT, { padding: 20, duration: 800 });
-    return;
+  } else {
+    zoomToFeu(nofeu);
   }
-  const features = map.querySourceFeatures('feux', { filter: ['==', ['get','NOFEU'], nofeu] });
-  if (!features.length) return;
-
-  let minLng=Infinity, minLat=Infinity, maxLng=-Infinity, maxLat=-Infinity;
-  features.forEach(f => {
-    flatCoords(f.geometry).forEach(([lng,lat]) => {
-      if(lng<minLng)minLng=lng; if(lng>maxLng)maxLng=lng;
-      if(lat<minLat)minLat=lat; if(lat>maxLat)maxLat=lat;
-    });
-  });
-  if (!isFinite(minLng)) return;
-  const pad = 0.04;
-  map.fitBounds([[minLng-pad,minLat-pad],[maxLng+pad,maxLat+pad]], { padding:50, duration:800, maxZoom:14 });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -583,13 +583,16 @@ async function initMap() {
   geojsonFeux   = feuxGJ;
   geojsonBg     = bgGJ;
   geojsonRegion = regionGJ;
+
+  // Index table
   tableJSON.forEach(row => { tableData[String(row.NOFEU)] = row; });
+
+  // Index bbox — précalculé une seule fois au chargement
+  bboxByNofeu = buildBboxIndex(feuxGJ);
 
   // Peupler le select
   const sel  = document.getElementById('sel-feu');
-  const seen = {};
-  feuxGJ.features.forEach(f => { seen[f.properties.NOFEU] = true; });
-  Object.keys(seen)
+  Object.keys(bboxByNofeu)
     .sort((a,b) => { const na=parseFloat(a),nb=parseFloat(b); return (!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b); })
     .forEach(n => { const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
 
@@ -613,7 +616,9 @@ async function initMap() {
 // ═══════════════════════════════════════════════════════════
 // CONTRÔLES UI
 // ═══════════════════════════════════════════════════════════
-document.getElementById('sel-feu').addEventListener('change', (e) => { selectFeu(e.target.value || null); });
+document.getElementById('sel-feu').addEventListener('change', (e) => {
+  selectFeu(e.target.value || null);
+});
 
 document.getElementById('slider-alpha').addEventListener('input', (e) => {
   currentAlpha = e.target.value / 100;
@@ -643,7 +648,7 @@ document.querySelectorAll('.bm-btn').forEach(btn => {
   });
 });
 
-// ── Tooltip style ──
+// Tooltip style
 const ts = document.createElement('style');
 ts.textContent = `
   .map-tooltip .maplibregl-popup-content {
