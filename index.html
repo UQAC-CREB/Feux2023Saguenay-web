@@ -15,33 +15,32 @@
 
     :root {
       --rouge:        #86282E;
-      --orange:       #ff9900;
-      --bleu:         #2C3E50;
-      --dark:         #383d44;
-      --panel-bg:     #2d3238;
-      --panel-border: #454c56;
-      --text-main:    #e8e8e8;
-      --text-muted:   #a0aab8;
+      --orange:       #e07b00;
+      --header-bg:    #86282E;
+      --panel-bg:     #f9f9f9;
+      --panel-border: #dde2e8;
+      --box-bg:       #ffffff;
+      --box-shadow:   0 2px 8px rgba(0,0,0,0.08);
+      --text-main:    #2a2a2a;
+      --text-muted:   #6b7280;
+      --text-label:   #374151;
     }
 
     html, body {
       height: 100%;
       font-family: 'Source Sans 3', sans-serif;
-      background: var(--dark);
+      background: var(--panel-bg);
       color: var(--text-main);
       overflow: hidden;
     }
 
     #header {
       height: 56px;
-      background: var(--rouge);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-      position: relative;
-      z-index: 10;
+      background: var(--header-bg);
+      display: flex; align-items: center;
+      padding: 0 20px; gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      position: relative; z-index: 10;
     }
     #header .flame { font-size: 22px; flex-shrink: 0; }
     #header h1 {
@@ -52,12 +51,12 @@
     }
     #header .year-badge {
       margin-left: auto; flex-shrink: 0;
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
       border-radius: 4px; padding: 2px 10px;
       font-family: 'Oswald', sans-serif;
       font-size: 13px; letter-spacing: 2px;
-      color: rgba(255,255,255,0.85);
+      color: rgba(255,255,255,0.9);
     }
 
     #app { display: flex; height: calc(100vh - 56px); }
@@ -67,20 +66,22 @@
       background: var(--panel-bg);
       border-right: 1px solid var(--panel-border);
       display: flex; flex-direction: column;
-      overflow-y: auto; padding: 16px 14px; gap: 14px;
+      overflow-y: auto; padding: 18px 16px; gap: 16px;
     }
     .panel-section { display: flex; flex-direction: column; gap: 7px; }
     .panel-label {
       font-family: 'Oswald', sans-serif; font-size: 11px;
-      letter-spacing: 1.8px; text-transform: uppercase; color: var(--text-muted);
+      letter-spacing: 1.6px; text-transform: uppercase; color: var(--text-muted);
     }
 
     select {
-      width: 100%; background: #3a3f47;
+      width: 100%;
+      background: var(--box-bg);
       border: 1px solid var(--panel-border); border-radius: 6px;
       color: var(--text-main); font-family: 'Source Sans 3', sans-serif;
       font-size: 14px; padding: 8px 10px;
       cursor: pointer; outline: none; transition: border-color 0.2s;
+      box-shadow: var(--box-shadow);
     }
     select:focus, select:hover { border-color: var(--orange); }
 
@@ -94,9 +95,10 @@
     .divider { border: none; border-top: 1px solid var(--panel-border); }
 
     #info-box {
-      background: #353b43;
+      background: var(--box-bg);
       border: 1px solid var(--panel-border);
       border-radius: 8px; padding: 11px 13px;
+      box-shadow: var(--box-shadow);
       display: flex; flex-direction: column; gap: 6px; min-height: 105px;
     }
     .info-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -115,19 +117,20 @@
     }
 
     #chart-wrap {
-      background: #353b43;
+      background: var(--box-bg);
       border: 1px solid var(--panel-border);
       border-radius: 8px; padding: 12px;
+      box-shadow: var(--box-shadow);
     }
     #myChart { width: 100% !important; }
 
     .layer-toggles { display: flex; flex-direction: column; gap: 6px; }
     .toggle-row {
       display: flex; align-items: center; gap: 10px;
-      font-size: 13px; color: var(--text-main);
+      font-size: 13px; color: var(--text-label);
       cursor: pointer; user-select: none;
     }
-    .toggle-row input[type=checkbox] { accent-color: var(--orange); cursor: pointer; }
+    .toggle-row input[type=checkbox] { accent-color: var(--rouge); cursor: pointer; }
     .toggle-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
     #map { flex: 1; position: relative; }
@@ -135,23 +138,23 @@
 
     #basemap-switch {
       position: absolute; top: 10px; right: 10px; z-index: 5;
-      display: flex; background: rgba(30,34,40,0.93);
-      border: 1px solid var(--panel-border); border-radius: 6px;
-      overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      display: flex; background: rgba(255,255,255,0.95);
+      border: 1px solid #d1d5db; border-radius: 6px;
+      overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
     .bm-btn {
       padding: 6px 12px; font-family: 'Source Sans 3', sans-serif;
       font-size: 12px; color: var(--text-muted); cursor: pointer;
       border: none; background: transparent;
-      border-right: 1px solid var(--panel-border);
+      border-right: 1px solid #d1d5db;
       transition: background 0.15s, color 0.15s; white-space: nowrap;
     }
     .bm-btn:last-child { border-right: none; }
-    .bm-btn.active { background: var(--rouge); color: #fff; }
-    .bm-btn:hover:not(.active) { background: rgba(255,255,255,0.07); color: var(--text-main); }
+    .bm-btn.active { background: var(--header-bg); color: #fff; }
+    .bm-btn:hover:not(.active) { background: #f3f4f6; color: var(--text-main); }
 
     #loading {
-      position: absolute; inset: 0; background: #383d44;
+      position: absolute; inset: 0; background: #f9f9f9;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 16px; z-index: 100; transition: opacity 0.5s;
@@ -159,8 +162,8 @@
     #loading.hidden { opacity: 0; pointer-events: none; }
     .spinner {
       width: 40px; height: 40px;
-      border: 3px solid var(--panel-border);
-      border-top-color: var(--orange);
+      border: 3px solid #e5e7eb;
+      border-top-color: var(--rouge);
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -172,7 +175,7 @@
 
     #panel::-webkit-scrollbar { width: 5px; }
     #panel::-webkit-scrollbar-track { background: transparent; }
-    #panel::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
+    #panel::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -338,8 +341,8 @@ function initChart() {
       labels: ['—'],
       datasets: [{
         data: [pseudoLog(0)],
-        backgroundColor: 'rgba(134,40,46,0.75)',
-        borderColor:     'rgba(192,57,43,1)',
+        backgroundColor: '#d1d5db',
+        borderColor: '#c0392b',
         borderWidth: 1, borderRadius: 4,
       }]
     },
@@ -359,20 +362,20 @@ function initChart() {
       },
       scales: {
         x: {
-          ticks: { color: '#a0aab8', font: { family: 'Source Sans 3', size: 11, weight: '600' }, maxRotation: 0 },
-          grid:  { color: 'rgba(255,255,255,0.04)' }
+          ticks: { color: '#6b7280', font: { family: 'Source Sans 3', size: 11, weight: '600' }, maxRotation: 0 },
+          grid:  { color: 'rgba(0,0,0,0.05)' }
         },
         y: {
           min: pseudoLog(0), max: pseudoLog(100000) * 1.05,
           ticks: {
-            color: '#a0aab8', font: { family: 'Source Sans 3', size: 10 },
+            color: '#6b7280', font: { family: 'Source Sans 3', size: 10 },
             callback: (val) => {
               const idx = Y_TICKS_RAW.findIndex(v => Math.abs(v - val) < 0.01);
               return idx >= 0 ? Y_TICKS_LABEL[idx] : '';
             },
           },
           afterBuildTicks: (axis) => { axis.ticks = Y_TICKS_RAW.map(v => ({ value: v })); },
-          grid: { color: 'rgba(255,255,255,0.06)' }
+          grid: { color: 'rgba(0,0,0,0.06)' }
         }
       }
     }
@@ -384,6 +387,7 @@ function updateChart(nofeu) {
   const v   = row ? (row.SUP_HA || 0) : 0;
   chartInst.data.labels           = [nofeu || 'Sélectionnez un feu'];
   chartInst.data.datasets[0].data = [pseudoLog(v)];
+  chartInst.data.datasets[0].backgroundColor = nofeu ? '#86282E' : '#d1d5db';
   chartInst.update();
 }
 
